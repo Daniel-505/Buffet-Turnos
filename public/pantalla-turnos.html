@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla de Turnos - Kiosco Escolar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .logo {
+            font-size: 3em;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .title {
+            font-size: 2.2em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #ffeaa7;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        /* 🔥 CONTENEDOR PRINCIPAL CON 2 COLUMNAS */
+        .columns-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .columna {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 400px;
+        }
+
+        .columna-izquierda {
+            border: 3px solid #00b894;
+        }
+
+        .columna-derecha {
+            border: 3px solid #fd79a8;
+        }
+
+        .titulo-columna {
+            color: white;
+            font-size: 1.8em;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .titulo-listo {
+            background: rgba(0, 184, 148, 0.3);
+        }
+
+        .titulo-cola {
+            background: rgba(253, 121, 168, 0.3);
+        }
+
+        /* 🔥 TURNOS MÁS COMPACTOS */
+        .turnos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .turno-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            border: 3px solid #fdcb6e;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .turno-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+        }
+
+        .turno-card.listo {
+            border-color: #00b894;
+            animation: highlight 2s ease-in-out;
+        }
+
+        .turno-card.listo::before {
+            background: #00b894;
+        }
+
+        .turno-card.en-cola {
+            border-color: #fd79a8;
+        }
+
+        .turno-card.en-cola::before {
+            background: #fd79a8;
+        }
+
+        .turno-number {
+            font-size: 2.8em;
+            font-weight: bold;
+            color: #2d3436;
+            margin: 5px 0;
+            text-shadow: 1px 1px 0 #ddd;
+        }
+
+        .turno-status {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 5px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-listo {
+            background: #00b894;
+            color: white;
+            animation: blink 1.5s infinite;
+        }
+
+        .status-en-cola {
+            background: #fd79a8;
+            color: white;
+        }
+
+        .alumno-info {
+            font-size: 1em;
+            color: #2d3436;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .turno-mensaje {
+            font-size: 0.9em;
+            color: #636e72;
+            margin: 3px 0;
+        }
+
+        .hora {
+            font-size: 0.8em;
+            color: #b2bec3;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 15px;
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+
+        .empty-text {
+            font-size: 1.5em;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        .clock {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2d3436;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .connection-connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .connection-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1em;
+            margin-top: 15px;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+        }
+
+        .marquee {
+            background: #ffeaa7;
+            color: #e17055;
+            padding: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Animaciones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes highlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); box-shadow: 0 0 15px #00b894; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.8; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .columns-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .title {
+                font-size: 1.8em;
+            }
+            
+            .turno-number {
+                font-size: 2.2em;
+            }
+            
+            .turno-status {
+                font-size: 1em;
+            }
+            
+            .turnos-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .title {
+                font-size: 1.5em;
+            }
+            
+            .turnos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clock" id="clock">--:--:--</div>
+    <div id="connectionStatus" class="connection-status" style="display: none;"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏫</div>
+            <h1 class="title">KISCO ESCOLAR</h1>
+            <div class="subtitle">Sistema de Turnos de Compra</div>
+        </div>
+
+        <div class="marquee">
+            🏫 Kiosco Escolar - Espere su turno para comprar 🏫
+        </div>
+
+        <!-- 🔥 CONTENEDOR CON 2 COLUMNAS -->
+        <div class="columns-container">
+            <!-- 🔥 COLUMNA IZQUIERDA - TURNOS LISTOS -->
+            <div class="columna columna-izquierda">
+                <h2 class="titulo-columna titulo-listo">✅ LISTOS PARA RETIRAR</h2>
+                <div id="turnosListos" class="turnos-grid">
+                    <!-- Los turnos LISTOS (verdes) aparecerán aquí -->
+                </div>
+                <div id="emptyListos" class="empty-state" style="display: none;">
+                    <div class="empty-icon">⏰</div>
+                    <div class="empty-text">No hay turnos listos</div>
+                </div>
+            </div>
+
+            <!-- 🔥 COLUMNA DERECHA - TURNOS EN COLA -->
+            <div class="columna columna-derecha">
+                <h2 class="titulo-columna titulo-cola">⏳ PRÓXIMOS TURNOS</h2>
+                <div id="turnosEnCola" class="turnos-grid">
+                    <!-- Los turnos EN COLA (rojos) aparecerán aquí -->
+                </div>
+                <div id="emptyCola" class="empty-state" style="display: none;">
+                    <div class="empty-icon">⏰</div>
+                    <div class="empty-text">No hay turnos en espera</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔥 ESTADO VACÍO GENERAL -->
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">⏰</div>
+            <div class="empty-text">Esperando turnos...</div>
+            <p style="margin-top: 10px; font-size: 1.1em;">Los turnos aparecerán aquí automáticamente</p>
+        </div>
+
+        <div class="last-updated">
+            Actualizado: <span id="lastUpdated">--:--:--</span>
+        </div>
+    </div>
+
+    <script>
+        let turnos = [];
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        // Actualizar reloj
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Actualizar estado de conexión
+        function updateConnectionStatus(message, isConnected) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = isConnected ? '✅ Conectado' : '❌ ' + message;
+            statusElement.className = `connection-status ${isConnected ? 'connection-connected' : 'connection-disconnected'}`;
+            statusElement.style.display = 'block';
+        }
+
+        // Conectar WebSocket
+        function connectWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/turnos`;
+                
+                console.log('🔄 Pantalla - Conectando a:', wsUrl);
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    console.log('✅ Pantalla - Conectado al servidor WebSocket');
+                    updateConnectionStatus('Conectado', true);
+                    reconnectAttempts = 0;
+                    
+                    // Solicitar estado actual INMEDIATAMENTE
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            ws.send('get_turnos');
+                            console.log('📤 Pantalla - Solicitando estado actual');
+                        }
+                    }, 100);
+                };
+                
+                ws.onmessage = (event) => {
+                    console.log('📦 Pantalla - Datos recibidos:', event.data);
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.type === 'INITIAL_STATE' || data.type === 'UPDATE') {
+                            // 🔥 RECIBIR TODOS LOS TURNOS ACTIVOS (LISTOS + EN COLA)
+                            turnos = data.data || [];
+                            console.log('🔄 Pantalla - Turnos actualizados:', turnos.length);
+                            renderTurnos();
+                            updateLastUpdated();
+                        }
+                    } catch (error) {
+                        console.error('❌ Pantalla - Error parseando datos:', error);
+                    }
+                };
+                
+                ws.onclose = (event) => {
+                    console.log('🔌 Pantalla - WebSocket cerrado:', event.code, event.reason);
+                    updateConnectionStatus('Desconectado - Reconectando...', false);
+                    
+                    // Reconectar con backoff exponencial
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                        reconnectAttempts++;
+                        console.log(`🔄 Pantalla - Reconectando en ${delay}ms (intento ${reconnectAttempts})`);
+                        setTimeout(connectWebSocket, delay);
+                    } else {
+                        updateConnectionStatus('Error de conexión permanente', false);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('❌ Pantalla - Error WebSocket:', error);
+                    updateConnectionStatus('Error de conexión', false);
+                };
+                
+            } catch (error) {
+                console.error('❌ Pantalla - Error creando WebSocket:', error);
+                updateConnectionStatus('Error inicializando conexión', false);
+            }
+        }
+
+        // 🔥 RENDERIZAR TURNOS EN COLUMNAS
+        function renderTurnos() {
+            const containerListos = document.getElementById('turnosListos');
+            const containerEnCola = document.getElementById('turnosEnCola');
+            const emptyState = document.getElementById('emptyState');
+            const emptyListos = document.getElementById('emptyListos');
+            const emptyCola = document.getElementById('emptyCola');
+            
+            console.log('🎨 Pantalla - Renderizando', turnos.length, 'turnos');
+            
+            // 🔥 MOSTRAR TODOS LOS TURNOS ACTIVOS
+            const turnosActivos = turnos.filter(t => t.estado !== 'RETIRADO');
+            
+            if (turnosActivos.length === 0) {
+                containerListos.innerHTML = '';
+                containerEnCola.innerHTML = '';
+                emptyState.style.display = 'block';
+                emptyListos.style.display = 'none';
+                emptyCola.style.display = 'none';
+                return;
+            }
+            
+            // Ocultar estado vacío general
+            emptyState.style.display = 'none';
+            
+            // 🔥 SEPARAR TURNOS POR ESTADO
+            const turnosListos = turnosActivos.filter(t => t.estado === 'LISTO');
+            const turnosEnCola = turnosActivos.filter(t => t.estado === 'EN_COLA');
+            
+            console.log(`📊 Turnos LISTOS (izquierda): ${turnosListos.length}, EN COLA (derecha): ${turnosEnCola.length}`);
+            
+            // 🔥 RENDERIZAR COLUMNA IZQUIERDA - TURNOS LISTOS
+            if (turnosListos.length > 0) {
+                emptyListos.style.display = 'none';
+                // Ordenar por número de turno (más antiguos primero)
+                const turnosListosOrdenados = [...turnosListos].sort((a, b) => a.turnoNumero - b.turnoNumero);
+                containerListos.innerHTML = turnosListosOrdenados.map(turno => crearCardTurno(turno)).join('');
+            } else {
+                emptyListos.style.display = 'block';
+                containerListos.innerHTML = '';
+            }
+            
+            // 🔥 RENDERIZAR COLUMNA DERECHA - TURNOS EN COLA
+            if (turnosEnCola.length > 0) {
+                emptyCola.style.display = 'none';
+                // Ordenar por número de turno (más antiguos primero)
+                const turnosEnColaOrdenados = [...turnosEnCola].sort((a, b) => a.turnoNumero - b.turnoNumero);
+                containerEnCola.innerHTML = turnosEnColaOrdenados.map(turno => crearCardTurno(turno)).join('');
+            } else {
+                emptyCola.style.display = 'block';
+                containerEnCola.innerHTML = '';
+            }
+        }
+
+        // 🔥 FUNCIÓN PARA CREAR CARD DE TURNO
+        function crearCardTurno(turno) {
+            const estado = turno.estado.toLowerCase().replace('_', '-');
+            const textoEstado = turno.estado === 'LISTO' ? '¡LISTO!' : 'EN COLA';
+            const nombreAlumno = turno.nombre || 'Alumno';
+            const mensaje = turno.estado === 'LISTO' ? 'Retirar ahora' : 'En espera';
+            
+            return `
+            <div class="turno-card ${estado}">
+                <div class="turno-number">${turno.turnoNumero}</div>
+                <div class="turno-status status-${estado}">
+                    ${textoEstado}
+                </div>
+                <div class="alumno-info">
+                    ${nombreAlumno}
+                </div>
+                <div class="turno-mensaje">
+                    <strong>${mensaje}</strong>
+                </div>
+                <div class="hora">${new Date().toLocaleTimeString()}</div>
+            </div>
+            `;
+        }
+
+        function updateLastUpdated() {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Cargar estado inicial desde API REST (fallback)
+        async function loadInitialState() {
+            try {
+                console.log('🔄 Pantalla - Cargando estado inicial desde API...');
+                const response = await fetch('/api/current-orders');
+                if (!response.ok) throw new Error('Error en respuesta HTTP');
+                
+                const allTurnos = await response.json();
+                turnos = allTurnos || [];
+                console.log('✅ Pantalla - Estado inicial cargado:', turnos.length, 'turnos');
+                renderTurnos();
+                updateLastUpdated();
+            } catch (error) {
+                console.error('❌ Pantalla - Error cargando estado inicial:', error);
+            }
+        }
+
+        // Verificar conexión periódicamente
+        function checkConnection() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('🔍 Pantalla - Conexión WebSocket perdida, reconectando...');
+                connectWebSocket();
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Pantalla - Iniciando...');
+            
+            // Conectar WebSocket inmediatamente
+            connectWebSocket();
+            
+            // Cargar estado inicial como fallback
+            loadInitialState();
+            
+            // Verificar conexión cada 10 segundos
+            setInterval(checkConnection, 10000);
+            
+            // Recargar estado cada 30 segundos como backup
+            setInterval(loadInitialState, 30000);
+        });
+    </script>
+</body>
+</html>

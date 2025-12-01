@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Kiosquero - Buffet Turnos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px 0;
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+
+        .turnos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .turno-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #28a745;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .turno-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .turno-card.en-cola {
+            border-left-color: #ffc107;
+        }
+
+        .turno-card.listo {
+            border-left-color: #28a745;
+        }
+
+        .turno-card.retirado {
+            border-left-color: #6c757d;
+            opacity: 0.7;
+        }
+
+        .turno-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .turno-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .turno-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-en-cola {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-listo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-retirado {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .turno-info {
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .turno-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .connection-connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .connection-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .turnos-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .nav {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="nav">
+                <div class="logo">
+                      🏪 Kiosco Escolar - Panel
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalTurnos">0</div>
+                        <div class="stat-label">Total Turnos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="turnosEnCola">0</div>
+                        <div class="stat-label">En Cola</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="turnosListos">0</div>
+                        <div class="stat-label">Listos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <h1 class="section-title">Turnos de Compra - Kiosco Escolar</h1>            
+            <div id="connectionStatus" class="connection-status" style="display: none;"></div>
+            
+            <div id="turnosList" class="turnos-grid">
+                <div class="empty-state">
+                    <div class="icon">⏰</div>
+                    <h3>No hay turnos activos</h3>
+                    <p>Los turnos aparecerán aquí cuando los alumnos los soliciten</p>
+                </div>
+            </div>
+            
+            <div class="last-updated">
+                Última actualización: <span id="lastUpdated">--:--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let turnos = [];
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        // Conectar WebSocket - VERSIÓN CORREGIDA
+        function connectWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/turnos`;
+                
+                console.log('🔄 Kiosquero - Conectando a:', wsUrl);
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    console.log('✅ Kiosquero - Conectado al servidor WebSocket');
+                    updateConnectionStatus('Conectado', true);
+                    reconnectAttempts = 0;
+                    
+                    // 🔥 SOLICITAR ESTADO ACTUAL INMEDIATAMENTE
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.OPEN) {
+                            ws.send('get_turnos');
+                            console.log('📤 Kiosquero - Solicitando estado actual al servidor');
+                        }
+                    }, 100);
+                };
+                
+                ws.onmessage = (event) => {
+                    console.log('📦 Kiosquero - Datos recibidos:', event.data);
+                    
+                    try {
+                        const data = JSON.parse(event.data);
+                        
+                        if (data.type === 'INITIAL_STATE' || data.type === 'UPDATE') {
+                            turnos = data.data || [];
+                            console.log('🔄 Kiosquero - Turnos actualizados:', turnos.length);
+                            renderTurnos();
+                            updateStats();
+                            updateLastUpdated();
+                        }
+                    } catch (error) {
+                        console.error('❌ Kiosquero - Error parseando datos:', error);
+                    }
+                };
+                
+                ws.onclose = (event) => {
+                    console.log('🔌 Kiosquero - WebSocket cerrado:', event.code, event.reason);
+                    updateConnectionStatus('Desconectado - Reconectando...', false);
+                    
+                    // Reconectar con backoff exponencial
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                        reconnectAttempts++;
+                        console.log(`🔄 Kiosquero - Reconectando en ${delay}ms (intento ${reconnectAttempts})`);
+                        setTimeout(connectWebSocket, delay);
+                    } else {
+                        updateConnectionStatus('Error de conexión permanente', false);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('❌ Kiosquero - Error WebSocket:', error);
+                    updateConnectionStatus('Error de conexión', false);
+                };
+                
+            } catch (error) {
+                console.error('❌ Kiosquero - Error creando WebSocket:', error);
+                updateConnectionStatus('Error inicializando conexión', false);
+            }
+        }
+
+        function renderTurnos() {
+            const container = document.getElementById('turnosList');
+            
+            console.log('🎨 Kiosquero - Renderizando', turnos.length, 'turnos');
+            
+            if (turnos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⏰</div>
+                        <h3>No hay turnos activos</h3>
+                        <p>Los turnos aparecerán aquí cuando los alumnos los soliciten</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = turnos.map(turno => {
+                const estado = turno.estado.toLowerCase().replace('_', '-');
+                const textoEstado = turno.estado.replace('_', ' ');
+                
+                return `
+                <div class="turno-card ${estado}">
+                    <div class="turno-header">
+                        <div class="turno-number">#${turno.turnoNumero}</div>
+                        <div class="turno-status status-${estado}">
+                            ${textoEstado}
+                        </div>
+                    </div>
+                    
+                    <div class="turno-info">
+                        <div class="info-item">
+                            <span class="info-label">Alumno:</span>
+                            <span class="info-value">${turno.nombre || 'Cliente'} ${turno.apellido || ''}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">DNI:</span>
+                            <span class="info-value">${turno.alumnoDNI}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Pedido:</span>
+                            <span class="info-value">${turno.items || 'Combo Estándar'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Hora:</span>
+                            <span class="info-value">${new Date().toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="turno-actions">
+                        ${turno.estado === 'EN_COLA' ? `
+                            <button class="btn btn-warning" onclick="updateTurnoEstado(${turno.turnoNumero}, 'LISTO')">
+                                🍽️ Marcar Listo
+                            </button>
+                        ` : ''}
+                        
+                        ${turno.estado === 'LISTO' ? `
+                            <button class="btn btn-success" onclick="updateTurnoEstado(${turno.turnoNumero}, 'RETIRADO')">
+                                ✅ Marcar Retirado
+                            </button>
+                        ` : ''}
+                        
+                        ${turno.estado !== 'RETIRADO' ? `
+                            <button class="btn btn-secondary" onclick="updateTurnoEstado(${turno.turnoNumero}, 'RETIRADO')">
+                                ❌ Cancelar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = turnos.length;
+            const enCola = turnos.filter(t => t.estado === 'EN_COLA').length;
+            const listos = turnos.filter(t => t.estado === 'LISTO').length;
+            
+            document.getElementById('totalTurnos').textContent = total;
+            document.getElementById('turnosEnCola').textContent = enCola;
+            document.getElementById('turnosListos').textContent = listos;
+        }
+
+        function updateLastUpdated() {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateConnectionStatus(message, isConnected) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = isConnected ? '✅ Conectado' : '❌ ' + message;
+            statusElement.className = `connection-status ${isConnected ? 'connection-connected' : 'connection-disconnected'}`;
+            statusElement.style.display = 'block';
+        }
+
+        async function updateTurnoEstado(turnoNumero, nuevoEstado) {
+            try {
+                console.log(`🔄 Kiosquero - Actualizando turno ${turnoNumero} a ${nuevoEstado}`);
+                
+                const response = await fetch('/api/update-estado', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        turno: turnoNumero,
+                        estado: nuevoEstado
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Kiosquero - Turno ${turnoNumero} actualizado a ${nuevoEstado}`);
+                    // El WebSocket se encargará de la actualización automática
+                } else {
+                    console.error('❌ Kiosquero - Error:', result.message);
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('❌ Kiosquero - Error actualizando turno:', error);
+                alert('Error de conexión al actualizar el turno');
+            }
+        }
+
+        // Verificar conexión periódicamente
+        function checkConnection() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log('🔍 Kiosquero - Conexión WebSocket perdida, reconectando...');
+                connectWebSocket();
+            }
+        }
+
+        // Inicializar - VERSIÓN MEJORADA
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Kiosquero - Iniciando panel...');
+            
+            // Conectar WebSocket inmediatamente
+            connectWebSocket();
+            
+            // Cargar estado inicial como fallback
+            loadInitialState();
+            
+            // Verificar conexión cada 10 segundos
+            setInterval(checkConnection, 10000);
+            
+            // Recargar estado cada 30 segundos como backup
+            setInterval(loadInitialState, 30000);
+        });
+
+        // Cargar estado inicial desde API REST (fallback)
+        async function loadInitialState() {
+            try {
+                console.log('🔄 Kiosquero - Cargando estado inicial desde API...');
+                const response = await fetch('/api/current-orders');
+                if (!response.ok) throw new Error('Error en respuesta HTTP');
+                
+                const allTurnos = await response.json();
+                turnos = allTurnos || [];
+                console.log('✅ Kiosquero - Estado inicial cargado:', turnos.length, 'turnos');
+                renderTurnos();
+                updateStats();
+                updateLastUpdated();
+            } catch (error) {
+                console.error('❌ Kiosquero - Error cargando estado inicial:', error);
+            }
+        }
+    </script>
+</body>
+</html>

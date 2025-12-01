@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Alumno {
+  DNI      String   @id  // ⚠️ DNI como primary key, NO id
+  nombre   String
+  apellido String
+  password String
+  pedidos  Pedido[]
+  @@map("alumnos")
+}
+
+model PendingUser {
+  id                Int      @id @default(autoincrement())
+  DNI               String   @unique
+  nombre            String
+  apellido          String
+  password          String
+  email             String
+  verificationToken String   @unique
+  createdAt         DateTime @default(now())
+  @@map("pending_users")
+}
+
+model Pedido {
+  id          Int      @id @default(autoincrement())
+  turnoNumero Int      @unique
+  estado      String
+  items       String?
+  alumnoDNI   String
+  alumno      Alumno   @relation(fields: [alumnoDNI], references: [DNI], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  @@map("pedidos")
+}
