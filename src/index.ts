@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { html } from '@elysiajs/html';
+import * as promClient from 'prom-client'; // <-- 1. ¡AGREGAR ESTA IMPORTACIÓN!
 import { staticPlugin as file } from '@elysiajs/static';
 import { compare, hash } from 'bcrypt';
 import { randomUUID } from 'node:crypto'; 
@@ -15,9 +16,43 @@ const ADMIN_EMAIL = "fericos190@gmail.com";
 // Mapa para simular el estado de los turnos en memoria
 const pedidosEnCurso = new Map<number, { turnoNumero: number, estado: string, alumnoDNI?: string, nombre?: string, apellido?: string }>();
 
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const httpRequestsTotal = new promClient.Counter({
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
+    labelNames: ['method', 'route', 'status_code'],
+    registers: [register],
+});
+
+//const pedidosEnCurso = new Map<number, { turnoNumero: number, estado: string, alumnoDNI?: string, nombre?: string, apellido?: string }>();
+
 const app = new Elysia()
   .use(html())
   .use(file({ assets: 'public', prefix: '/' })) 
+
+  .get('/metrics', async () => {
+      const metrics = await register.metrics();
+      return new Response(metrics, {
+          headers: {
+              'Content-Type': register.contentType,
+          },
+      });
+  })
+  
+  // ⬅️ AGREGAR: 3b. Hook para contar las solicitudes
+  .onAfterHandle(({ request, set }) => {
+      const method = request.method;
+      // Usamos el pathname de la URL
+      const route = new URL(request.url).pathname; 
+      const statusCode = set.status;
+
+      httpRequestsTotal.inc({ method, route, status_code: statusCode });
+  })
+
+  // --- RUTAS DE VISUALIZACIÓN ---
+  .get('/', () => Bun.file('public/login.html'))
 
   // --- RUTAS DE VISUALIZACIÓN ---
   .get('/', () => Bun.file('public/login.html'))

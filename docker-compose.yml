@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: buffet-turnos
+    restart: unless-stopped
+    ports:
+      - "10.56.2.16:4000:3000"  # Escuchar en tu IP específica
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - APP_URL=http://10.56.2.16:4000
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+
+  # --- AGREGAR ESTO EN LA SECCIÓN DE SERVICES: ---
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    # Mapea el archivo de configuración y el volumen de datos
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090" # Prometheus UI
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3001:3000" # Acceso a Grafana en el puerto 3001
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+  node_exporter:
+    image: prom/node-exporter
+    container_name: node_exporter
+    # Mapeo de volúmenes para que pueda leer métricas del host Debian
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+# ------------------------------------------------
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

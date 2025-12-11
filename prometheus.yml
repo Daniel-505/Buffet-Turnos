@@ -1,0 +1,24 @@
+global:
+  # Intervalo predeterminado para recolectar métricas (cada 15 segundos)
+  scrape_interval: 15s
+
+scrape_configs:
+  # 1. Monitoreo de Prometheus (Prometheus se monitorea a sí mismo)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['10.56.2.16:9090']
+
+  # 2. Monitoreo de la Aplicación Buffet-Turnos
+  - job_name: 'buffet_turnos_app'
+    # targets: Usamos 'app' porque ese es el nombre del servicio en docker-compose
+    # Puerto: 3000 es el puerto interno donde Bun/Elysia escucha las métricas
+    static_configs:
+      - targets: ['app:3000']
+        labels:
+          application: 'buffet_turnos'
+
+  # 3. Monitoreo del Servidor (Salud de CPU/Memoria del Host)
+  - job_name: 'node_exporter'
+    # targets: Usamos 'node-exporter' si ese es el nombre del servicio en docker-compose
+    static_configs:
+      - targets: ['node-exporter:9100']

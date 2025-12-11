@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s # Frecuencia con la que Prometheus revisa las métricas
+
+scrape_configs:
+  # Monitoreo de Docker y Prometheus (Internal)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitoreo del Host (CPU, RAM, Disco)
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+  
+  - job_name: 'buffet_turnos_app'
+    scrape_interval: 5s # Monitorea más rápido la aplicación
+    static_configs:
+      - targets: ['app:3000'] # Usamos el nombre del servicio Docker y su puerto interno (3000)
